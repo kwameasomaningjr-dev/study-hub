@@ -1,0 +1,20 @@
+# Node.js dependencies
+backend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Databases
+backend/*.db
+backend/*.sqlite
+backend/db.json
+
+# Local Uploads
+backend/uploads/
+
+# Environment configurations
+backend/.env
+backend/.env.local
+backend/.env.development.local
+backend/.env.test.local
+backend/.env.production.local

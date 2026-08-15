@@ -18,7 +18,7 @@
         <a href="notes.html">Notes</a>
         <a href="uploads.html">Uploads</a>
         <a href="profile.html">Profile</a>
-        <a href="index.html">Logout</a>
+        <a href="#" id="logout-btn">Logout</a>
     </div>
 </nav>
 
@@ -27,35 +27,61 @@
     <h1>My Courses</h1>
     <p class="welcome-text">Courses you are currently studying.</p>
 
-    <div class="course-list">
-
-        <div class="course-card">
-            <h3>Computer Science</h3>
-            <p>Introduction to programming and computer science.</p>
-            <button>View Course</button>
-        </div>
-
-        <div class="course-card">
-            <h3>Data Structures</h3>
-            <p>Learn arrays, linked lists, stacks, queues and trees.</p>
-            <button>View Course</button>
-        </div>
-
-        <div class="course-card">
-            <h3>Operating Systems</h3>
-            <p>Study processes, memory management and scheduling.</p>
-            <button>View Course</button>
-        </div>
-
-        <div class="course-card">
-            <h3>Automata</h3>
-            <p>Learn DFA, NFA, regular expressions and languages.</p>
-            <button>View Course</button>
-        </div>
-
+    <div class="course-list" id="course-list">
+        <!-- Courses will be loaded here dynamically -->
     </div>
 
 </main>
+
+<script>
+    async function loadCourses() {
+        try {
+            const response = await fetch('/api/courses');
+            if (response.status === 401) {
+                window.location.href = 'index.html';
+                return;
+            }
+            const courses = await response.json();
+            const courseList = document.getElementById('course-list');
+            courseList.innerHTML = '';
+
+            if (courses.length === 0) {
+                courseList.innerHTML = '<p>No courses available.</p>';
+                return;
+            }
+
+            courses.forEach(course => {
+                const card = document.createElement('div');
+                card.className = 'course-card';
+                card.innerHTML = `
+                    <h3>${course.name}</h3>
+                    <p>${course.description || ''}</p>
+                    <button class="view-btn">View Course</button>
+                `;
+                
+                card.querySelector('.view-btn').addEventListener('click', () => {
+                    alert(`Viewing course: ${course.name}`);
+                });
+
+                courseList.appendChild(card);
+            });
+        } catch (error) {
+            console.error('Error fetching courses:', error);
+        }
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = 'index.html';
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    });
+
+    window.addEventListener('DOMContentLoaded', loadCourses);
+</script>
 
 </body>
 </html>

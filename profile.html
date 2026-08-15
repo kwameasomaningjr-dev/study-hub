@@ -1,12 +1,188 @@
-<nav>
-    <h2>Study Hub</h2>
+<!DOCTYPE html>
+<html lang="en">
 
-    <div class="nav-links">
-        <a href="dashboard.html">Dashboard</a>
-        <a href="courses.html">Courses</a>
-        <a href="notes.html">Notes</a>
-        <a href="uploads.html">Uploads</a>
-        <a href="profile.html">Profile</a>
-        <a href="index.html">Logout</a>
-    </div>
-</nav>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - StudyHub</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .profile-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        .profile-container h2 {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f3f4f6;
+            padding-bottom: 10px;
+            color: #1f2937;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4b5563;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .form-group input:disabled {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+        .profile-container button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+            width: 100%;
+        }
+        .profile-container button:hover {
+            background: #1d4ed8;
+        }
+        .status-message {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+        .status-message.success {
+            color: #10b981;
+        }
+        .status-message.error {
+            color: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav>
+        <h2>Study Hub</h2>
+
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="courses.html">Courses</a>
+            <a href="notes.html">Notes</a>
+            <a href="uploads.html">Uploads</a>
+            <a href="profile.html">Profile</a>
+            <a href="#" id="logout-btn">Logout</a>
+        </div>
+    </nav>
+
+    <main class="page">
+        <div class="profile-container">
+            <h2>User Profile</h2>
+            
+            <div id="status" class="status-message"></div>
+
+            <form id="profile-form">
+                <div class="form-group">
+                    <label for="email">Email Address (Read-only)</label>
+                    <input type="email" id="email" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label for="fullname">Full Name</label>
+                    <input type="text" id="fullname" required placeholder="Enter your full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="student-id">Student ID</label>
+                    <input type="text" id="student-id" required placeholder="Enter your student ID">
+                </div>
+
+                <div class="form-group">
+                    <label for="bio">Biography / Notes</label>
+                    <textarea id="bio" rows="5" placeholder="Tell us about yourself, your major, or your learning goals..."></textarea>
+                </div>
+
+                <button type="submit">Save Profile Changes</button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/auth/me');
+                if (response.status === 401) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+                const data = await response.json();
+                
+                document.getElementById('email').value = data.email || '';
+                document.getElementById('fullname').value = data.fullname || '';
+                document.getElementById('student-id').value = data.studentId || '';
+                document.getElementById('bio').value = data.bio || '';
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fullname = document.getElementById('fullname').value;
+            const studentId = document.getElementById('student-id').value;
+            const bio = document.getElementById('bio').value;
+            
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/profile', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullname, studentId, bio })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    statusDiv.textContent = 'Profile updated successfully!';
+                    statusDiv.className = 'status-message success';
+                    statusDiv.style.display = 'block';
+                } else {
+                    statusDiv.textContent = data.error || 'Failed to update profile.';
+                    statusDiv.className = 'status-message error';
+                    statusDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                statusDiv.textContent = 'A network error occurred.';
+                statusDiv.className = 'status-message error';
+                statusDiv.style.display = 'block';
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', loadProfile);
+    </script>
+</body>
+</html>

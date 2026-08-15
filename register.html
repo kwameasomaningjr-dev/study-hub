@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,7 +16,9 @@
         <h1>Study Hub</h1>
         <p class="subtitle">Create your student account</p>
 
-        <form action="index.html">
+        <div id="error-message" style="color: #ff4d4d; margin-bottom: 15px; text-align: center; display: none;"></div>
+
+        <form id="register-form">
 
             <label for="fullname">Full Name</label>
             <input
@@ -72,6 +73,45 @@
 
 </div>
 
+<script>
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fullname = document.getElementById('fullname').value;
+        const studentId = document.getElementById('student-id').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        const errorDiv = document.getElementById('error-message');
+
+        errorDiv.style.display = 'none';
+
+        if (password !== confirmPassword) {
+            errorDiv.textContent = 'Passwords do not match.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fullname, studentId, email, password })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                window.location.href = 'dashboard.html';
+            } else {
+                errorDiv.textContent = data.error || 'Registration failed';
+                errorDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            errorDiv.textContent = 'A network error occurred. Please try again.';
+            errorDiv.style.display = 'block';
+        }
+    });
+</script>
+
 </body>
 </html>
--

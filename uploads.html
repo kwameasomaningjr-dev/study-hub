@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Hub - Uploads</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .uploads-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .uploads-section {
+            flex: 2;
+            min-width: 300px;
+        }
+        .upload-form-section {
+            flex: 1;
+            min-width: 250px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            align-self: flex-start;
+        }
+        .upload-form-section input[type="file"] {
+            display: block;
+            margin-bottom: 15px;
+            border: 1px dashed #cbd5e1;
+            padding: 20px;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+            background: #f8fafc;
+            text-align: center;
+            cursor: pointer;
+        }
+        .upload-form-section button {
+            width: 100%;
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .upload-form-section button:hover {
+            background: #1d4ed8;
+        }
+        .upload-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .upload-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .upload-info span {
+            font-size: 24px;
+        }
+        .upload-details strong {
+            display: block;
+            color: #1f2937;
+        }
+        .upload-details p {
+            font-size: 12px;
+            color: #6b7280;
+            margin: 4px 0 0 0;
+        }
+        .view-btn {
+            background: #f3f4f6;
+            color: #374151;
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid #d1d5db;
+        }
+        .view-btn:hover {
+            background: #e5e7eb;
+        }
+        #upload-status {
+            margin-top: 10px;
+            font-size: 13px;
+            text-align: center;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav>
+    <h2>Study Hub</h2>
+
+    <div class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="courses.html">Courses</a>
+        <a href="notes.html">Notes</a>
+        <a href="uploads.html">Uploads</a>
+        <a href="profile.html">Profile</a>
+        <a href="#" id="logout-btn">Logout</a>
+    </div>
+</nav>
+
+<main class="page">
+
+    <h1>My Uploads</h1>
+    <p class="welcome-text">Manage your uploaded study resources and slides.</p>
+
+    <div class="uploads-container">
+        
+        <div class="uploads-section">
+            <div id="uploads-list">
+                <!-- Uploaded items loaded dynamically -->
+            </div>
+        </div>
+
+        <div class="upload-form-section">
+            <h3>Upload New File</h3>
+            <form id="upload-form">
+                <input type="file" id="file-input" required>
+                <button type="submit" id="submit-btn">Upload File</button>
+            </form>
+            <div id="upload-status"></div>
+        </div>
+
+    </div>
+
+</main>
+
+<script>
+    async function loadUploads() {
+        try {
+            const response = await fetch('/api/uploads');
+            if (response.status === 401) {
+                window.location.href = 'index.html';
+                return;
+            }
+            const uploads = await response.json();
+            const listDiv = document.getElementById('uploads-list');
+            listDiv.innerHTML = '';
+
+            if (uploads.length === 0) {
+                listDiv.innerHTML = '<p style="color: #666;">No files uploaded yet. Add files using the upload box on the right!</p>';
+                return;
+            }
+
+            uploads.forEach(upload => {
+                const item = document.createElement('div');
+                item.className = 'upload-item';
+                
+                // Set file icon
+                let icon = '📄';
+                if (upload.fileType) {
+                    if (upload.fileType.includes('pdf')) icon = '📕';
+                    else if (upload.fileType.includes('image')) icon = '🖼️';
+                    else if (upload.fileType.includes('presentation') || upload.fileType.includes('powerpoint')) icon = '📊';
+                }
+
+                const uploadDate = new Date(upload.createdAt).toLocaleDateString();
+
+                item.innerHTML = `
+                    <div class="upload-info">
+                        <span>${icon}</span>
+                        <div class="upload-details">
+                            <strong>${upload.filename}</strong>
+                            <p>Uploaded on ${uploadDate}</p>
+                        </div>
+                    </div>
+                    <a href="${upload.fileUrl}" target="_blank" class="view-btn">View File</a>
+                `;
+                listDiv.appendChild(item);
+            });
+        } catch (error) {
+            console.error('Error fetching uploads:', error);
+        }
+    }
+
+    document.getElementById('upload-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById('file-input');
+        const statusDiv = document.getElementById('upload-status');
+        const submitBtn = document.getElementById('submit-btn');
+
+        if (fileInput.files.length === 0) return;
+
+        const file = fileInput.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+
+        statusDiv.style.color = '#2563eb';
+        statusDiv.textContent = 'Uploading...';
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/uploads', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                statusDiv.style.color = '#10b981';
+                statusDiv.textContent = 'Upload successful!';
+                fileInput.value = '';
+                loadUploads();
+            } else {
+                const data = await response.json();
+                statusDiv.style.color = '#ef4444';
+                statusDiv.textContent = 'Upload failed: ' + (data.error || 'Server error');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            statusDiv.style.color = '#ef4444';
+            statusDiv.textContent = 'Network error during upload.';
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = 'index.html';
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    });
+
+    window.addEventListener('DOMContentLoaded', loadUploads);
+</script>
+
+</body>
+</html>
