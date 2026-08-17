@@ -1,19 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --primary-color: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-light: #eff6ff;
-  --bg-color: #f8fafc;
+  --primary-color: #18181b;     /* Zinc 900 (Monochrome Primary) */
+  --primary-hover: #09090b;     /* Zinc 950 */
+  --primary-light: #f4f4f5;     /* Zinc 100 */
+  --bg-color: #fafafa;          /* Zinc 50 */
   --card-bg: #ffffff;
-  --text-main: #1f2937;
-  --text-muted: #64748b;
-  --border-color: #e2e8f0;
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-  --radius: 12px;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --text-main: #09090b;         /* Zinc 950 */
+  --text-muted: #71717a;        /* Zinc 500 */
+  --border-color: #e4e4e7;      /* Zinc 200 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  --radius: 8px;                /* Sleek sharp corners */
+  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -48,9 +48,7 @@ nav {
 nav h2 {
   font-size: 22px;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--primary-color), #3b82f6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--primary-color);
 }
 
 .nav-links {
@@ -131,7 +129,7 @@ h1 {
 .dashboard-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
-  border-color: #bfdbfe;
+  border-color: var(--primary-color);
 }
 
 .dashboard-card h3 {
@@ -277,7 +275,7 @@ button, .view-btn {
 
 button:hover, .view-btn:hover {
   background: var(--primary-hover);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .course-card button, .note-card button {
@@ -290,7 +288,7 @@ button:hover, .view-btn:hover {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%);
   padding: 20px;
 }
 
@@ -309,9 +307,7 @@ button:hover, .view-btn:hover {
   font-size: 32px;
   font-weight: 800;
   margin-bottom: 8px;
-  background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--primary-color);
 }
 
 .auth-box form label {
