@@ -301,22 +301,7 @@ app.get('*', (req, res, next) => {
   next();
 });
 
-// Database sync and seeding defaults
-async function seedDefaultCourses() {
-  const count = await Course.count();
-  if (count === 0) {
-    await Course.bulkCreate([
-      { name: 'Computer Science', description: 'Introduction to programming and computer science.' },
-      { name: 'Data Structures', description: 'Learn arrays, linked lists, stacks, queues and trees.' },
-      { name: 'Operating Systems', description: 'Study processes, memory management and scheduling.' },
-      { name: 'Automata', description: 'Learn DFA, NFA, regular expressions and languages.' }
-    ]);
-    console.log('Seeded default study courses.');
-  }
-}
-
 sequelize.sync({ force: false }).then(async () => {
-  await seedDefaultCourses();
   app.listen(PORT, () => {
     console.log(`Study Hub server running on http://localhost:${PORT}`);
   });
