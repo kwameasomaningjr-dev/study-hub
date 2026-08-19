@@ -161,6 +161,24 @@ app.get('/api/courses', isAuthenticated, async (req, res) => {
   }
 });
 
+app.post('/api/courses', isAuthenticated, async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'Course name is required.' });
+    }
+
+    const course = await Course.create({
+      name,
+      description: description || ''
+    });
+
+    res.status(201).json(course);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error creating course.' });
+  }
+});
+
 // API: Notes
 app.get('/api/notes', isAuthenticated, async (req, res) => {
   try {

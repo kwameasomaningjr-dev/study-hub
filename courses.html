@@ -5,6 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Hub - Courses</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .courses-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .courses-section {
+            flex: 2;
+            min-width: 300px;
+        }
+        .create-section {
+            flex: 1;
+            min-width: 250px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            align-self: flex-start;
+        }
+        .create-section input, .create-section textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .create-section button {
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .create-section button:hover {
+            background: var(--primary-hover);
+        }
+    </style>
 </head>
 
 <body>
@@ -27,8 +70,27 @@
     <h1>My Courses</h1>
     <p class="welcome-text">Courses you are currently studying.</p>
 
-    <div class="course-list" id="course-list">
-        <!-- Courses will be loaded here dynamically -->
+    <div class="courses-container">
+        
+        <div class="courses-section">
+            <div class="course-list" id="course-list">
+                <!-- Courses will be loaded here dynamically -->
+            </div>
+        </div>
+
+        <div class="create-section">
+            <h3>Add New Course</h3>
+            <form id="create-course-form">
+                <label for="course-name" style="display:block; margin-bottom: 6px; font-size:14px; font-weight:600;">Course Name</label>
+                <input type="text" id="course-name" placeholder="Course Name" required>
+
+                <label for="course-description" style="display:block; margin-bottom: 6px; font-size:14px; font-weight:600;">Description</label>
+                <textarea id="course-description" rows="5" placeholder="Description of the course..." required></textarea>
+
+                <button type="submit">Create Course</button>
+            </form>
+        </div>
+
     </div>
 
 </main>
@@ -46,7 +108,7 @@
             courseList.innerHTML = '';
 
             if (courses.length === 0) {
-                courseList.innerHTML = '<p>No courses available.</p>';
+                courseList.innerHTML = '<p style="color: #666;">No courses available. Create your first course on the right!</p>';
                 return;
             }
 
@@ -69,6 +131,31 @@
             console.error('Error fetching courses:', error);
         }
     }
+
+    document.getElementById('create-course-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('course-name').value;
+        const description = document.getElementById('course-description').value;
+
+        try {
+            const response = await fetch('/api/courses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description })
+            });
+
+            if (response.ok) {
+                document.getElementById('course-name').value = '';
+                document.getElementById('course-description').value = '';
+                loadCourses();
+            } else {
+                const data = await response.json();
+                alert('Failed to save course: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error saving course:', error);
+        }
+    });
 
     document.getElementById('logout-btn').addEventListener('click', async (e) => {
         e.preventDefault();
