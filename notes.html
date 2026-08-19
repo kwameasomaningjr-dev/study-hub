@@ -130,6 +130,10 @@
 <script>
     async function loadNotesAndCourses() {
         try {
+            // Get URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const filterCourseId = urlParams.get('courseId');
+
             // Load courses first to populate select options
             const courseRes = await fetch('/api/courses');
             if (courseRes.status === 401) {
@@ -148,14 +152,25 @@
                 courseSelect.appendChild(opt);
             });
 
+            if (filterCourseId) {
+                courseSelect.value = filterCourseId;
+            }
+
             // Load notes
             const notesRes = await fetch('/api/notes');
-            const notes = await notesRes.json();
+            let notes = await notesRes.json();
+            
+            if (filterCourseId) {
+                notes = notes.filter(n => n.courseId === Number(filterCourseId));
+            }
+
             const notesList = document.getElementById('notes-list');
             notesList.innerHTML = '';
 
             if (notes.length === 0) {
-                notesList.innerHTML = '<p style="color: #666;">No notes saved yet. Write your first note on the right!</p>';
+                notesList.innerHTML = filterCourseId
+                    ? '<p style="color: #666;">No notes saved for this course yet. Write your first note on the right!</p>'
+                    : '<p style="color: #666;">No notes saved yet. Write your first note on the right!</p>';
                 return;
             }
 

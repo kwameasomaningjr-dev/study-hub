@@ -60,7 +60,7 @@
                 `;
                 
                 card.querySelector('.view-btn').addEventListener('click', () => {
-                    alert(`Viewing course: ${course.name}`);
+                    window.location.href = `notes.html?courseId=${course.id}`;
                 });
 
                 courseList.appendChild(card);
