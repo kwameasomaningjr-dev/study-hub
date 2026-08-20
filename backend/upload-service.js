@@ -10,22 +10,24 @@ if (!fs.existsSync(localUploadsDir)) {
   fs.mkdirSync(localUploadsDir, { recursive: true });
 }
 
-// Check if AWS S3 config is provided
-const isS3Configured = !!(
-  process.env.AWS_ACCESS_KEY_ID &&
-  process.env.AWS_SECRET_ACCESS_KEY &&
-  process.env.AWS_BUCKET_NAME
-);
+// Check if AWS S3 config is provided (either via environment variables or implicit IAM Role on EC2)
+const isS3Configured = !!process.env.AWS_BUCKET_NAME;
 
 let s3Client = null;
 if (isS3Configured) {
-  s3Client = new S3Client({
-    region: process.env.AWS_REGION || 'us-east-1',
-    credentials: {
+  const s3Config = {
+    region: process.env.AWS_REGION || 'us-east-1'
+  };
+
+  // If credentials are explicitly provided (e.g. for local development), use them
+  if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+    s3Config.credentials = {
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-    }
-  });
+    };
+  }
+
+  s3Client = new S3Client(s3Config);
   console.log('AWS S3 upload service configured successfully.');
 } else {
   console.log('AWS S3 not configured. Falling back to local storage.');
