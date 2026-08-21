@@ -18,13 +18,28 @@ app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Dynamic Session Store Configuration (Local: MemoryStore, AWS/RDS: SequelizeStore)
+let sessionStore;
+if (typeof sequelize.define === 'function') {
+  const SequelizeStore = require('connect-session-sequelize')(session.Store);
+  sessionStore = new SequelizeStore({
+    db: sequelize,
+    tableName: 'Sessions'
+  });
+}
+
 // Session Setup
 app.use(session({
   secret: process.env.SESSION_SECRET || 'study-hub-super-secret-key',
+  store: sessionStore,
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
 }));
+
+if (sessionStore) {
+  sessionStore.sync();
+}
 
 // Session Logging Middleware
 app.use((req, res, next) => {
