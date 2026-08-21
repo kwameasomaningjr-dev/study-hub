@@ -115,14 +115,23 @@
             courses.forEach(course => {
                 const card = document.createElement('div');
                 card.className = 'course-card';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
                 card.innerHTML = `
                     <h3>${course.name}</h3>
-                    <p>${course.description || ''}</p>
-                    <button class="view-btn">View Course</button>
+                    <p style="margin-bottom: 20px; flex-grow: 1;">${course.description || ''}</p>
+                    <div style="display: flex; gap: 8px; margin-top: auto; width: 100%;">
+                        <button class="view-notes-btn" style="flex: 1; font-size: 13px; padding: 8px 12px; font-weight: 600;">Notes</button>
+                        <button class="view-uploads-btn" style="flex: 1; font-size: 13px; padding: 8px 12px; font-weight: 600; background: #e2e8f0; color: #1f2937; border: 1px solid #cbd5e1;">Uploads</button>
+                    </div>
                 `;
                 
-                card.querySelector('.view-btn').addEventListener('click', () => {
+                card.querySelector('.view-notes-btn').addEventListener('click', () => {
                     window.location.href = `notes.html?courseId=${course.id}`;
+                });
+                
+                card.querySelector('.view-uploads-btn').addEventListener('click', () => {
+                    window.location.href = `uploads.html?courseId=${course.id}`;
                 });
 
                 courseList.appendChild(card);

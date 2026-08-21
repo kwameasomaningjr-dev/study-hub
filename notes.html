@@ -48,20 +48,31 @@
         .note-card {
             position: relative;
         }
-        .delete-btn {
+        .note-card h3 {
+            padding-right: 65px; /* Prevent long titles from overlapping with the delete button */
+        }
+        .note-card .delete-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 12px;
+            right: 12px;
             background: #ef4444;
             color: white;
             border: none;
-            border-radius: 4px;
-            padding: 4px 8px;
+            border-radius: 6px;
+            padding: 6px 12px;
             cursor: pointer;
             font-size: 12px;
+            font-weight: 600;
+            width: auto; /* Override the 100% width rule from style.css */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: auto;
+            transition: var(--transition);
         }
-        .delete-btn:hover {
+        .note-card .delete-btn:hover {
             background: #dc2626;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
         }
         .course-badge {
             display: inline-block;

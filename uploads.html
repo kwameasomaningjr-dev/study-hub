@@ -129,6 +129,13 @@
         <div class="upload-form-section">
             <h3>Upload New File</h3>
             <form id="upload-form">
+                <label for="upload-course" style="display:block; margin-bottom: 6px; font-size:14px; font-weight:600;">Course</label>
+                <select id="upload-course" style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; background: #f8fafc;">
+                    <option value="">No Course Associated</option>
+                    <!-- Course options loaded dynamically -->
+                </select>
+
+                <label for="file-input" style="display:block; margin-bottom: 6px; font-size:14px; font-weight:600;">Select File</label>
                 <input type="file" id="file-input" required>
                 <button type="submit" id="submit-btn">Upload File</button>
             </form>
@@ -142,17 +149,52 @@
 <script>
     async function loadUploads() {
         try {
+            // Get URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const filterCourseId = urlParams.get('courseId');
+
+            // Load courses first
+            const courseRes = await fetch('/api/courses');
+            if (courseRes.status === 401) {
+                window.location.href = 'index.html';
+                return;
+            }
+            const courses = await courseRes.json();
+            const courseSelect = document.getElementById('upload-course');
+            
+            // Populate select options
+            courseSelect.innerHTML = '<option value="">No Course Associated</option>';
+            courses.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                courseSelect.appendChild(opt);
+            });
+
+            if (filterCourseId) {
+                courseSelect.value = filterCourseId;
+            }
+
+            // Load uploads
             const response = await fetch('/api/uploads');
             if (response.status === 401) {
                 window.location.href = 'index.html';
                 return;
             }
-            const uploads = await response.json();
+            let uploads = await response.json();
+            
+            // Filter uploads if filter is active
+            if (filterCourseId) {
+                uploads = uploads.filter(u => u.courseId === Number(filterCourseId));
+            }
+
             const listDiv = document.getElementById('uploads-list');
             listDiv.innerHTML = '';
 
             if (uploads.length === 0) {
-                listDiv.innerHTML = '<p style="color: #666;">No files uploaded yet. Add files using the upload box on the right!</p>';
+                listDiv.innerHTML = filterCourseId
+                    ? '<p style="color: #666;">No files uploaded for this course yet. Add files using the upload box on the right!</p>'
+                    : '<p style="color: #666;">No files uploaded yet. Add files using the upload box on the right!</p>';
                 return;
             }
 
@@ -169,6 +211,9 @@
                 }
 
                 const uploadDate = new Date(upload.createdAt).toLocaleDateString();
+                const courseBadge = upload.Course 
+                    ? `<span class="course-badge" style="display: inline-block; background: var(--primary-light); color: var(--primary-color); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-top: 8px;">${upload.Course.name}</span>`
+                    : '';
 
                 item.innerHTML = `
                     <div class="upload-info">
@@ -176,6 +221,7 @@
                         <div class="upload-details">
                             <strong>${upload.filename}</strong>
                             <p>Uploaded on ${uploadDate}</p>
+                            ${courseBadge}
                         </div>
                     </div>
                     <a href="${upload.fileUrl}" target="_blank" class="view-btn">View File</a>
@@ -190,14 +236,19 @@
     document.getElementById('upload-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fileInput = document.getElementById('file-input');
+        const courseSelect = document.getElementById('upload-course');
         const statusDiv = document.getElementById('upload-status');
         const submitBtn = document.getElementById('submit-btn');
 
         if (fileInput.files.length === 0) return;
 
         const file = fileInput.files[0];
+        const courseId = courseSelect.value;
         const formData = new FormData();
         formData.append('file', file);
+        if (courseId) {
+            formData.append('courseId', courseId);
+        }
 
         statusDiv.style.color = '#2563eb';
         statusDiv.textContent = 'Uploading...';
@@ -213,6 +264,11 @@
                 statusDiv.style.color = '#10b981';
                 statusDiv.textContent = 'Upload successful!';
                 fileInput.value = '';
+                // Keep the course select value if a filter is active, otherwise reset it
+                const urlParams = new URLSearchParams(window.location.search);
+                if (!urlParams.get('courseId')) {
+                    courseSelect.value = '';
+                }
                 loadUploads();
             } else {
                 const data = await response.json();
