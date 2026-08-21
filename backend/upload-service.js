@@ -11,7 +11,7 @@ if (!fs.existsSync(localUploadsDir)) {
 }
 
 // Check if AWS S3 config is provided (either via environment variables or implicit IAM Role on EC2)
-const isS3Configured = !!process.env.AWS_BUCKET_NAME;
+const isS3Configured = !!process.env.AWS_BUCKET_NAME && process.env.USE_LOCAL_DB !== 'true';
 
 let s3Client = null;
 if (isS3Configured) {

@@ -293,6 +293,7 @@ app.get('/api/uploads', isAuthenticated, async (req, res) => {
   try {
     const uploads = await Upload.findAll({
       where: { userId: req.session.userId },
+      include: [{ model: Course, attributes: ['name'] }],
       order: [['createdAt', 'DESC']]
     });
     res.json(uploads);
@@ -307,6 +308,8 @@ app.post('/api/uploads', isAuthenticated, upload.single('file'), async (req, res
       return res.status(400).json({ error: 'No file uploaded.' });
     }
 
+    const { courseId } = req.body;
+
     const uploadDetails = await handleFileUpload(req.file);
     if (!uploadDetails) {
       return res.status(500).json({ error: 'File upload failed.' });
@@ -316,6 +319,7 @@ app.post('/api/uploads', isAuthenticated, upload.single('file'), async (req, res
       filename: uploadDetails.filename,
       fileUrl: uploadDetails.fileUrl,
       fileType: uploadDetails.fileType,
+      courseId: courseId ? Number(courseId) : null,
       userId: req.session.userId
     });
 
@@ -377,7 +381,7 @@ app.get('*', (req, res, next) => {
   next();
 });
 
-sequelize.sync({ force: false }).then(async () => {
+sequelize.sync({ alter: true }).then(async () => {
   app.listen(PORT, () => {
     console.log(`Study Hub server running on http://localhost:${PORT}`);
   });

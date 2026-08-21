@@ -8,7 +8,8 @@ const hasDbConfig = !!(
   process.env.DB_HOST && 
   process.env.DB_PASSWORD &&
   !process.env.DB_HOST.includes('xxxxxx') &&
-  !process.env.DB_PASSWORD.includes('your_rds_master_password')
+  !process.env.DB_PASSWORD.includes('your_rds_master_password') &&
+  process.env.USE_LOCAL_DB !== 'true'
 );
 
 if (hasDbConfig) {
@@ -56,7 +57,8 @@ if (hasDbConfig) {
   const Upload = sequelize.define('Upload', {
     filename: { type: DataTypes.STRING, allowNull: false },
     fileUrl: { type: DataTypes.STRING, allowNull: false },
-    fileType: { type: DataTypes.STRING, allowNull: false }
+    fileType: { type: DataTypes.STRING, allowNull: false },
+    courseId: { type: DataTypes.INTEGER, allowNull: true }
   });
 
   // Define Associations
@@ -68,6 +70,9 @@ if (hasDbConfig) {
 
   User.hasMany(Upload, { foreignKey: 'userId', onDelete: 'CASCADE' });
   Upload.belongsTo(User, { foreignKey: 'userId' });
+
+  Course.hasMany(Upload, { foreignKey: 'courseId', onDelete: 'SET NULL' });
+  Upload.belongsTo(Course, { foreignKey: 'courseId' });
 
   module.exports = {
     sequelize,
@@ -284,6 +289,15 @@ if (hasDbConfig) {
         });
       }
 
+      // Populate Course association
+      results = results.map(u => {
+        const course = db.courses.find(c => c.id === Number(u.courseId));
+        return {
+          ...u,
+          Course: course ? { name: course.name } : null
+        };
+      });
+
       if (order) {
         const [[col, dir]] = order;
         if (col === 'createdAt') {
@@ -303,6 +317,7 @@ if (hasDbConfig) {
       const uploadItem = {
         id: newId,
         ...uploadData,
+        courseId: uploadData.courseId ? Number(uploadData.courseId) : null,
         userId: Number(uploadData.userId),
         createdAt: new Date().toISOString()
       };
