@@ -11,6 +11,9 @@ const { upload, handleFileUpload } = require('./upload-service');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy settings for hosting behind load balancers/reverse proxies (e.g. AWS)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -22,6 +25,12 @@ app.use(session({
   saveUninitialized: false,
   cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
 }));
+
+// Session Logging Middleware
+app.use((req, res, next) => {
+  console.log(`[Session Log] ${req.method} ${req.path} - Session ID: ${req.sessionID} - User: ${req.session.userId || 'Guest'}`);
+  next();
+});
 
 // Serves the local uploads folder if fallback storage is used
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -66,8 +75,13 @@ app.post('/api/auth/register', async (req, res) => {
 
     req.session.userId = user.id;
     req.session.fullname = user.fullname;
-
-    res.status(201).json({ message: 'Registration successful', user: { id: user.id, fullname: user.fullname, email: user.email } });
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).json({ error: 'Session save failed.' });
+      }
+      res.status(201).json({ message: 'Registration successful', user: { id: user.id, fullname: user.fullname, email: user.email } });
+    });
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Server error during registration.' });
@@ -94,11 +108,40 @@ app.post('/api/auth/login', async (req, res) => {
 
     req.session.userId = user.id;
     req.session.fullname = user.fullname;
-
-    res.json({ message: 'Login successful', user: { id: user.id, fullname: user.fullname, email: user.email } });
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).json({ error: 'Session save failed.' });
+      }
+      res.json({ message: 'Login successful', user: { id: user.id, fullname: user.fullname, email: user.email } });
+    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Server error during login.' });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { email, studentId, newPassword } = req.body;
+
+    if (!email || !studentId || !newPassword) {
+      return res.status(400).json({ error: 'All fields are required.' });
+    }
+
+    const user = await User.findOne({ where: { email, studentId } });
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid email or Student ID.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ message: 'Password reset successfully.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Server error during password reset.' });
   }
 });
 

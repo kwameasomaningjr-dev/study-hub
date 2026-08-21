@@ -42,7 +42,7 @@
                     Remember me
                 </label>
 
-                <a href="#">Forgot password?</a>
+                <a href="forgot-password.html">Forgot password?</a>
             </div>
 
             <button type="submit">Login</button>
@@ -59,6 +59,15 @@
 </div>
 
 <script>
+    // Check if redirecting after a successful password reset
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('reset') === 'success') {
+        const errorDiv = document.getElementById('error-message');
+        errorDiv.textContent = 'Password reset successfully! Please log in.';
+        errorDiv.style.color = '#10b981'; // Success green
+        errorDiv.style.display = 'block';
+    }
+
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('email').value;
@@ -66,6 +75,7 @@
         const errorDiv = document.getElementById('error-message');
 
         errorDiv.style.display = 'none';
+        errorDiv.style.color = '#ff4d4d'; // Reset to error red
 
         try {
             const response = await fetch('/api/auth/login', {
